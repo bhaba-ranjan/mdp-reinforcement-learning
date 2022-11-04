@@ -66,10 +66,11 @@ class QLearningAgent(ReinforcementAgent):
         "*** YOUR CODE HERE ***"
         if state == 'TERMINAL_STATE':
             return 0
-        mxQ = -1e20
+        tempDict = util.Counter()
         for a in self.getLegalActions(state):
-            mxQ = max(mxQ, self.getQValue(state,a))
-        return mxQ
+            tempDict[a] = self.getQValue(state, a)
+        key = tempDict.argMax()
+        return tempDict[key]
 
     def computeActionFromQValues(self, state):
         """
@@ -122,7 +123,7 @@ class QLearningAgent(ReinforcementAgent):
             self.qValues[(state, action)] = ((1 - self.alpha) * prev) + (self.alpha * reward)
         else:
             self.qValues[(state, action)] = ((1 - self.alpha) * prev) + (self.alpha * reward) + (
-                        self.alpha * self.discount * self.getValue(nextState))
+                    self.alpha * self.discount * self.getValue(nextState))
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -186,14 +187,23 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        qval = 0
+        feat = self.featExtractor.getFeatures(state, action)
+        for i in feat:
+            qval = qval + (feat[i] * self.weights[i])
+        return qval
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        prev = reward + self.discount * self.getValue(nextState)
+        diff = prev - self.getQValue(state, action)
+        feat = self.featExtractor.getFeatures(state, action)
+        for i in feat:
+            self.weights[i] += (self.alpha*diff*feat[i])
+
 
     def final(self, state):
         "Called at the end of each game."
